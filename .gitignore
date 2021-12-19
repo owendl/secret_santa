@@ -39,4 +39,4 @@ vignettes/*.pdf
 .Renviron
 
 # SMTP Credentials
-smtp_creds
+smtp_creds.json
