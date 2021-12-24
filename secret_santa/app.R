@@ -4,6 +4,9 @@ library(mailR)
 smtp_creds = read_json("smtp_creds.json")
 # Define UI for application that draws a histogram
 
+find_substring<-function(r){
+    return(grepl(r[2] ,r[3]))
+}
 
 ui <- fluidPage(
     # Application title
@@ -98,14 +101,22 @@ server <- function(input, output) {
             emails = c(emails, input[[paste0("email",i)]])
             excludes = c(excludes, input[[paste0("exclude",i)]])
     }
+    # Create a quick lookup to go from name to email
     names(emails) = names
+    
+    # Create all combinations of the santa and recipient, then removing when santa == recipient
     name_combos = expand.grid(santa = names, recipient = names)
+    name_combos = name_combos[name_combos$santa != name_combos$recipient,]
+    
+    # Merge the exclusion criteria onto 
     exclusion = data.frame(santa = names, exclude = excludes, stringsAsFactors = FALSE)
     name_combos = merge(name_combos, exclusion)
-    print(name_combos)
-    name_combos = name_combos[name_combos$santa != name_combos$recipient,]
-    print(name_combos)
     
+    
+    
+    
+    name_combos = name_combos[!apply(name_combos,1,find_substring),]
+    print(name_combos)
 
     # create function wrappe around grepl
     # call this function with apply over name_combos recipient in exclude
