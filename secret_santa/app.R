@@ -23,32 +23,14 @@ ui <- fluidPage(
         )       
         
         ,column(2,
-               tags$div(id = 'names'),
-               wellPanel(
-                   textInput("nameA", label = "default names", value="drew")
-                   ,textInput("nameB", label = "default names", value="amelia")
-                   ,textInput("nameC", label = "default names", value="chris")
-                   ,textInput("nameD", label = "default names", value="amanda")
-               )
+                tags$div(id = 'names')
         )
         
         ,column(4,
-           tags$div(id = 'emails'),
-           wellPanel(
-               textInput("emailA", label = "default emails", value="drduber@gmail.com")
-               ,textInput("emailB", label = "default emails", value="atgodfrey@gmail.com")
-               ,textInput("emailC", label = "default emails", value="dowen3@gatech.edu")
-               ,textInput("emailD", label = "default emails", value="owen.drew.l@gmail.com")
-           )    
+                tags$div(id = 'emails')
         )
         ,column(3,
-                tags$div(id = 'excludes'),
-                wellPanel(
-                    textInput("excludeA", label = "default", value="amelia")
-                    ,textInput("excludeB", label = "default", value="drew")
-                    ,textInput("excludeC", label = "default", value="amanda")
-                    ,textInput("excludeD", label = "default", value="chris")
-                )        
+                tags$div(id = 'excludes')
         )
     )
 )
@@ -56,7 +38,7 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     # Tracking the id's of the insert button
-    inserted = c("A", "B","C","D")
+    inserted = c()
     
     # Add entry row
     observeEvent(input$insertBtn, {
@@ -112,26 +94,36 @@ server <- function(input, output) {
     exclusion = data.frame(santa = names, exclude = excludes, stringsAsFactors = FALSE)
     name_combos = merge(name_combos, exclusion)
     
-    
-    
-    
+    # Remove rows where the recipient is present in the exclusion string
     name_combos = name_combos[!apply(name_combos,1,find_substring),]
-    print(name_combos)
+    
+    draws = data.frame()
+    
+    for(n in names){
+        options = name_combos[name_combos$santa == n,]
+        
+        draw =  options[sample(nrow(options),1),]
+        
+        santa_mask = !(name_combos$santa == n)
+        recipient_mask = !(name_combos$recipient == draw$recipient)
+        
+        name_combos = name_combos[santa_mask | recipient_mask,]
+        draws = rbind(draws, draw)
+    }
+    body_text = "Hello %s,
+    You are part of a secret santa drawing. The person you have drawn is %s.
+    "
 
-    # create function wrappe around grepl
-    # call this function with apply over name_combos recipient in exclude
-    
-
-    
-    
-    # send.mail(from = "secretsantabydrew@gmail.com",
-    #           to = "drduber@gmail.com",
-    #           subject = "Subject of the email -secret santa",
-    #           body = input$text,
-    #           smtp = list(host.name = "smtp.gmail.com", port = 465, user.name = smtp_creds$user, passwd = smtp_creds$password, ssl = TRUE),
-    #           authenticate = TRUE,
-    #           send = TRUE)
-     })
+    for(i in 1:nrow(draws)){
+    send.mail(from = "secretsantabydrew@gmail.com",
+              to = emails[draws$santa[i]],
+              subject = "Subject of the email -secret santa",
+              body = sprintf(body_text, draws[i,"santa"],draws[i,"recipient"]),
+              smtp = list(host.name = "smtp.gmail.com", port = 465, user.name = smtp_creds$user, passwd = smtp_creds$password, ssl = TRUE),
+              authenticate = TRUE,
+              send = TRUE)
+    }
+        })
    
 }
 
