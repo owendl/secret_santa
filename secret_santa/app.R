@@ -14,11 +14,13 @@ ui <- fluidPage(
     fluidRow(
         column(3,
                wellPanel(
-                   actionButton('insertBtn', 'Insert'),
+                   h4("This is a simple app to do a black box secret santa drawing."),
+                   h5("Fill in the for to the right with the name and email of the persons involved in the drawing. You can optionally add a list of people that a participant should not get in the drawing."),
+                   actionButton('insertBtn', 'Add row'),
                    br(),
-                   actionButton('removeBtn', 'Remove'), 
+                   actionButton('removeBtn', 'Remove row'), 
                    br(),
-                   actionButton("submitBtn", "Submit")
+                   actionButton("submitBtn", "Submit drawing")
                 )
         )       
         
@@ -33,12 +35,31 @@ ui <- fluidPage(
                 tags$div(id = 'excludes')
         )
     )
+    
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
+
+    
     # Tracking the id's of the insert button
-    inserted = c()
+    inserted = c("A","B","C")
+    
+    for(n in inserted){
+        insertUI(
+            selector = '#names',
+            ui = textInput(paste0('name', n), 'Name')            
+        )
+        insertUI(
+            selector = '#emails',
+            ui = textInput(paste0('email', n), 'email')
+        )
+        insertUI(
+            selector = '#excludes',
+            ui = textInput(paste0('exclude', n), "can't get",value = "NA")
+        )
+        
+    }
     
     # Add entry row
     observeEvent(input$insertBtn, {
