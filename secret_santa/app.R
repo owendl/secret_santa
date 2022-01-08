@@ -20,6 +20,11 @@ ui <- fluidPage(
                    br(),
                    actionButton('removeBtn', 'Remove row'), 
                    br(),
+                   br(),
+                   h5("Optional email that will receive all the results of the drawing:"),
+                   textInput("admin",NULL),
+                   br(),
+                   br(),
                    actionButton("submitBtn", "Submit drawing")
                 )
         )       
@@ -38,7 +43,7 @@ ui <- fluidPage(
     
 )
 
-# Define server logic required to draw a histogram
+
 server <- function(input, output) {
 
     
@@ -134,17 +139,30 @@ server <- function(input, output) {
     body_text = "Hello %s,
     You are part of a secret santa drawing. The person you have drawn is %s.
     "
-
+    draws_string='|santa|drawing|\n'
     for(i in 1:nrow(draws)){
-    send.mail(from = "secretsantabydrew@gmail.com",
+        send.mail(from = "secretsantabydrew@gmail.com",
               to = emails[draws$santa[i]],
               subject = "Subject of the email -secret santa",
               body = sprintf(body_text, draws[i,"santa"],draws[i,"recipient"]),
               smtp = list(host.name = "smtp.gmail.com", port = 465, user.name = smtp_creds$user, passwd = smtp_creds$password, ssl = TRUE),
               authenticate = TRUE,
               send = TRUE)
-    }
-        })
+    
+        draws_string=paste(draws_string, draws[i,"santa"], draws[i,"recipient"],"\n", sep = "|")
+        }
+    
+    if(input$admin != ""){
+        admin_text = "result of secret santa draws:"
+        send.mail(from = "secretsantabydrew@gmail.com",
+                  to = input$admin,
+                  subject = "Subject of the email -secret santa",
+                  body =  paste(admin_text,draws_string,sep = "\n"),
+                  smtp = list(host.name = "smtp.gmail.com", port = 465, user.name = smtp_creds$user, passwd = smtp_creds$password, ssl = TRUE),
+                  authenticate = TRUE,
+                  send = TRUE)
+        }
+    })
    
 }
 
