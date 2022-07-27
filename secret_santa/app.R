@@ -1,6 +1,7 @@
 library(shiny)
 library(jsonlite)
 library(mailR)
+library(shinyFeedback)
 smtp_creds = read_json("smtp_creds.json")
 # Define UI for application that draws a histogram
 
@@ -9,6 +10,7 @@ find_substring<-function(r){
 }
 
 ui <- fluidPage(
+    useShinyFeedback(feedback = FALSE),
     # Application title
     titlePanel("Secret Santa by Drew"),
     fluidRow(
@@ -123,6 +125,14 @@ server <- function(input, output) {
     # Remove rows where the recipient is present in the exclusion string
     name_combos = name_combos[!apply(name_combos,1,find_substring),]
     
+    if(nrow(name_combos)<length(names))
+    {
+        showToast(
+            "error", 
+            "The combination of names and exclusions results in not enough potential draw options. Please reconfigure your exclusions and retry."
+        )
+    }else{
+    
     draws = data.frame()
     
     for(n in names){
@@ -162,6 +172,7 @@ server <- function(input, output) {
                   authenticate = TRUE,
                   send = TRUE)
         }
+    }
     })
    
 }
